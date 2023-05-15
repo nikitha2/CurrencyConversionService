@@ -22,7 +22,7 @@ public class CurrencyConversionControllerDaoService {
 
 	@Autowired
 	DbConfiguration dbConfiguration;
-
+	
 	@Autowired
 	CustomerExchangeProxy customerExchangeProxy;
 
@@ -37,7 +37,7 @@ public class CurrencyConversionControllerDaoService {
 			}
 		};
 	}
-
+	
 	public CurrencyConversionEntity findByFromAndToAndQuantityWithRestTemplate(String fromCurrency, String toCurrency,
 			BigDecimal quantity) {
 
@@ -50,32 +50,29 @@ public class CurrencyConversionControllerDaoService {
 				new HttpEntity<Object>(createHeaders(dbConfiguration.getUsername(), dbConfiguration.getPassword())),
 				CurrencyConversionEntity.class, uriVariable);
 
-		// Can be used if no authentication needed. In other words, if spring-security
-		// is not used
-		/**
-		 * ResponseEntity<CurrencyConversionEntity> responseEntity = new
-		 * RestTemplate().getForEntity(
-		 * "http://localhost:8000/currency-exchange/from/{fromCurrency}/to/{toCurrency}",
-		 * CurrencyConversionEntity.class, uriVariable);
-		 **/
+		// Can be used if no authentication needed. In other words, if spring-security is not used
+        /** ResponseEntity<CurrencyConversionEntity> responseEntity = new RestTemplate().getForEntity(
+				"http://localhost:8000/currency-exchange/from/{fromCurrency}/to/{toCurrency}", 
+				CurrencyConversionEntity.class,
+				uriVariable); 
+		**/
 
 		CurrencyConversionEntity responseEntityBody = responseEntity.getBody();
 		return new CurrencyConversionEntity(responseEntityBody.getId(), responseEntityBody.getFrom(),
 				responseEntityBody.getTo(), responseEntityBody.getConversionMultiple(), quantity,
 				quantity.multiply(responseEntityBody.getConversionMultiple()), responseEntityBody.getEnvironment());
 	}
-
+	
 	public CurrencyConversionEntity findByFromAndToAndQuantityWithFeign(String fromCurrency, String toCurrency,
 			BigDecimal quantity) {
 		HashMap<String, String> uriVariable = new HashMap<>();
 		uriVariable.put("fromCurrency", fromCurrency);
 		uriVariable.put("toCurrency", toCurrency);
 
-		CurrencyConversionEntity responseEntity = customerExchangeProxy.findByFromCurrencyAndToCurrency(fromCurrency,
-				toCurrency);
+		CurrencyConversionEntity responseEntity = customerExchangeProxy.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency);
 
-		return new CurrencyConversionEntity(responseEntity.getId(), responseEntity.getFrom(), responseEntity.getTo(),
-				responseEntity.getConversionMultiple(), quantity,
+		return new CurrencyConversionEntity(responseEntity.getId(), responseEntity.getFrom(),
+				responseEntity.getTo(), responseEntity.getConversionMultiple(), quantity,
 				quantity.multiply(responseEntity.getConversionMultiple()), responseEntity.getEnvironment());
 	}
 
