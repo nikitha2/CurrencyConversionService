@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.springboot.microservices.currencyconversionservice.configuration.DbConfiguration;
+import com.springboot.microservices.currencyconversionservice.feignproxy.CustomerExchangeProxy;
 import com.springboot.microservices.currencyconversionservice.model.CurrencyConversionEntity;
 
 @Component
@@ -21,8 +22,23 @@ public class CurrencyConversionControllerDaoService {
 
 	@Autowired
 	DbConfiguration dbConfiguration;
+	
+	@Autowired
+	CustomerExchangeProxy customerExchangeProxy;
 
-	public CurrencyConversionEntity findByFromAndToAndQuantity(String fromCurrency, String toCurrency,
+	HttpHeaders createHeaders(String username, String password) {
+		return new HttpHeaders() {
+			private static final long serialVersionUID = 1L;
+			{
+				String auth = username + ":" + password;
+				byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
+				String authHeader = "Basic " + new String(encodedAuth);
+				set("Authorization", authHeader);
+			}
+		};
+	}
+	
+	public CurrencyConversionEntity findByFromAndToAndQuantityWithRestTemplate(String fromCurrency, String toCurrency,
 			BigDecimal quantity) {
 
 		HashMap<String, String> uriVariable = new HashMap<>();
@@ -47,16 +63,18 @@ public class CurrencyConversionControllerDaoService {
 				quantity.multiply(responseEntityBody.getConversionMultiple()), responseEntityBody.getEnvironment());
 	}
 
-	HttpHeaders createHeaders(String username, String password) {
-		return new HttpHeaders() {
-			private static final long serialVersionUID = 1L;
-			{
-				String auth = username + ":" + password;
-				byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
-				String authHeader = "Basic " + new String(encodedAuth);
-				set("Authorization", authHeader);
-			}
-		};
+	
+	public CurrencyConversionEntity findByFromAndToAndQuantityWithFeign(String fromCurrency, String toCurrency,
+			BigDecimal quantity) {
+		HashMap<String, String> uriVariable = new HashMap<>();
+		uriVariable.put("fromCurrency", fromCurrency);
+		uriVariable.put("toCurrency", toCurrency);
+
+		CurrencyConversionEntity responseEntity = customerExchangeProxy.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency);
+
+		return new CurrencyConversionEntity(responseEntity.getId(), responseEntity.getFrom(),
+				responseEntity.getTo(), responseEntity.getConversionMultiple(), quantity,
+				quantity.multiply(responseEntity.getConversionMultiple()), responseEntity.getEnvironment());
 	}
 
 }
