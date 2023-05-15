@@ -17,12 +17,22 @@ public class CurrencyConversionController {
 	
 	//http://localhost:8100/currency-conversion/from/USD/to/INR/quantity/10
 	@GetMapping("/currency-conversion/from/{fromCurrency}/to/{toCurrency}/quantity/{quantity}")
-	public CurrencyConversionEntity findByFromAndToAndQuantity(
+	public CurrencyConversionEntity findByFromAndToAndQuantityWithRestTemplate(
 			@PathVariable String fromCurrency,
 			@PathVariable String toCurrency,
 			@PathVariable BigDecimal quantity) {
 		
-		return currencyConversionControllerDaoService.findByFromAndToAndQuantity(fromCurrency,toCurrency,quantity);
+		return currencyConversionControllerDaoService.findByFromAndToAndQuantityWithRestTemplate(fromCurrency,toCurrency,quantity);
+		
+	}
+	
+	@GetMapping("/currency-conversion-feign/from/{fromCurrency}/to/{toCurrency}/quantity/{quantity}")
+	public CurrencyConversionEntity findByFromAndToAndQuantityWithFeign(
+			@PathVariable String fromCurrency,
+			@PathVariable String toCurrency,
+			@PathVariable BigDecimal quantity) {
+		
+		return currencyConversionControllerDaoService.findByFromAndToAndQuantityWithFeign(fromCurrency,toCurrency,quantity);
 		
 	}
 
